@@ -42,8 +42,11 @@ TEST(SSTable, PointLookups) {
     auto f = t->get(k(i * 2));
     ASSERT_TRUE(f) << i;
     EXPECT_EQ(f->seq, static_cast<SequenceNumber>(i + 1));
-    if (i % 7 == 0) EXPECT_EQ(f->type, ValueType::Deletion);
-    else EXPECT_EQ(f->value, "value" + std::to_string(i));
+    if (i % 7 == 0) {
+      EXPECT_EQ(f->type, ValueType::Deletion);
+    } else {
+      EXPECT_EQ(f->value, "value" + std::to_string(i));
+    }
     EXPECT_FALSE(t->get(k(i * 2 + 1)));  // the gaps
   }
   EXPECT_FALSE(t->get("a"));

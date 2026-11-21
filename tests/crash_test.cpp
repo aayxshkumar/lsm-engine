@@ -18,7 +18,9 @@ TEST(Crash, SyncedWriteSurvivesUnsyncedMayNot) {
   auto db = DB::open(fs, "/db");
   EXPECT_EQ(db->get("a"), "synced");
   // "b" may or may not be there, but if it is, it's intact.
-  if (auto b = db->get("b")) EXPECT_EQ(*b, "unsynced");
+  if (auto b = db->get("b")) {
+    EXPECT_EQ(*b, "unsynced");
+  }
 }
 
 TEST(Crash, LossOfUnsyncedWritesHappensAndIsAPrefix) {
