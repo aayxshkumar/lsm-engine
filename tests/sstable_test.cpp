@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 
+#include <cstdio>
+
 #include "lsm/coding.hpp"
 #include "lsm/sim_fs.hpp"
 #include "lsm/sstable.hpp"
