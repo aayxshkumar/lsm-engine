@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-gcc-release
+            os: ubuntu-24.04
+            cxx: g++
+            flags: -DCMAKE_BUILD_TYPE=Release
+          - name: linux-clang-release
+            os: ubuntu-24.04
+            cxx: clang++
+            flags: -DCMAKE_BUILD_TYPE=Release
+          - name: linux-gcc-asan-ubsan
+            os: ubuntu-24.04
+            cxx: g++
+            flags: -DCMAKE_BUILD_TYPE=Debug -DLSM_SANITIZERS=address,undefined
+          - name: macos-clang-ubsan
+            os: macos-15
+            cxx: clang++
+            flags: -DCMAKE_BUILD_TYPE=Debug -DLSM_SANITIZERS=undefined
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} ${{ matrix.flags }}
+      - name: Build
+        run: cmake --build build -j 4
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Crash sweep
+        run: ./build/lsm_crash --seeds 500 --quiet
+      - name: Same run on every platform
+        # A seed must make the same choices under every compiler and
+        # standard library.
+        run: ./build/lsm_crash --seed 7 | grep -q "7251 file-system mutations"
+      - name: Benchmark smoke run
+        if: matrix.name == 'linux-gcc-release'
+        run: ./build/lsm_bench --n 50000 --dir "$RUNNER_TEMP/lsm_bench"
